@@ -1,7 +1,6 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import Dock from '@/components/layout/Dock.astro';
-import CookieConsent from '@/components/ui/CookieConsent';
 
 interface Props {
   title: string;
@@ -29,7 +28,6 @@ const { title, description, image, wide = false } = Astro.props;
   </main>
 
   <Dock currentPath={Astro.url.pathname} />
-  <CookieConsent client:idle />
 </BaseLayout>
 
 <style>
