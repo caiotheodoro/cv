@@ -1,0 +1,183 @@
+---
+import PageLayout from '@/layouts/PageLayout.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import { getCertifications } from '@/lib/notion-fetch';
+import type { Certification } from '@/types/index';
+
+const PER_PAGE = 6;
+
+export async function getStaticPaths() {
+  const PER_PAGE = 6;
+  const all = await getCertifications();
+  const totalPages = Math.max(1, Math.ceil(all.length / PER_PAGE));
+  return Array.from({ length: totalPages }, (_, i) => ({
+    params: { page: String(i + 1) },
+    props: {
+      items: all.slice(i * PER_PAGE, (i + 1) * PER_PAGE),
+      currentPage: i + 1,
+      totalPages,
+    },
+  }));
+}
+
+interface Props {
+  items: Certification[];
+  currentPage: number;
+  totalPages: number;
+}
+
+const { items, currentPage, totalPages } = Astro.props;
+
+const issuerColors: Record<string, { text: string; border: string }> = {
+  AWS: { text: '#C47600', border: '#FF990033' },
+  IBM: { text: '#1F70C1', border: '#1F70C133' },
+  Google: { text: '#C5221F', border: '#EA433533' },
+};
+---
+
+<PageLayout title="Certifications | Caio Theodoro" description="Professional certifications." wide>
+  <div class="page-nav">
+    <a href="/projects" class="back">← Professional / Projects</a>
+  </div>
+  <PageHeader title="Certifications" />
+
+  <div class="grid">
+    {items.map((item) => (
+      <div class="card">
+        <div class="card-top">
+          <span
+            class="issuer-badge"
+            style={`color: ${issuerColors[item.issuer]?.text ?? '#666'}; border-color: ${issuerColors[item.issuer]?.border ?? '#ccc'}`}
+          >{item.issuer}</span>
+          <p class="card-name">{item.name}</p>
+          {item.credentialId && <p class="credential-id">{item.credentialId}</p>}
+        </div>
+        <div class="card-bottom">
+          <span />
+          {item.link && (
+            <a href={item.link} target="_blank" rel="noopener noreferrer" aria-label="View certificate" class="link-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
+
+  {totalPages > 1 && (
+    <div class="pagination">
+      {currentPage > 1
+        ? <a href={`/projects/certifications/${currentPage - 1}`} class="page-btn">← Previous</a>
+        : <span class="page-btn disabled">← Previous</span>
+      }
+      <span class="page-info">{currentPage} / {totalPages}</span>
+      {currentPage < totalPages
+        ? <a href={`/projects/certifications/${currentPage + 1}`} class="page-btn">Next →</a>
+        : <span class="page-btn disabled">Next →</span>
+      }
+    </div>
+  )}
+</PageLayout>
+
+<style>
+  .page-nav {
+    margin-bottom: 1.5rem;
+  }
+  .back {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .back:hover {
+    color: var(--color-text);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+  .card {
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    background: var(--color-bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+    transition: border-color 0.15s;
+  }
+  .card:hover {
+    border-color: var(--color-border-strong);
+  }
+  .card-top {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .card-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.3;
+  }
+  .card-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .link-icon {
+    color: var(--color-text-tertiary);
+    display: flex;
+    align-items: center;
+    transition: color 0.15s;
+  }
+  .link-icon:hover {
+    color: var(--color-text);
+  }
+  .issuer-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 2px 7px;
+    border-radius: 6px;
+    border: 1px solid;
+    background: transparent;
+    display: inline-block;
+    width: fit-content;
+  }
+  .credential-id {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--color-text-tertiary);
+    letter-spacing: 0.04em;
+  }
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+  }
+  .page-btn {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .page-btn:not(.disabled):hover {
+    color: var(--color-text);
+  }
+  .page-btn.disabled {
+    color: var(--color-text-tertiary);
+    cursor: default;
+  }
+  .page-info {
+    font-size: 0.72rem;
+    color: var(--color-text-tertiary);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

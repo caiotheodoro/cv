@@ -1,0 +1,50 @@
+---
+import TimelineEntry from './TimelineEntry.astro';
+import type { JourneyEntry } from '@/types/index';
+
+interface Props {
+  year: number;
+  entries: JourneyEntry[];
+}
+
+const { year, entries } = Astro.props;
+---
+
+<div class="timeline-year-group" style="position: relative;" data-fade>
+  <!-- Big faded year -->
+  <div
+    class="font-heading"
+    style="
+      font-size: 5rem;
+      font-weight: 800;
+      color: var(--color-border);
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 20px;
+      user-select: none;
+    "
+  >
+    {year}
+  </div>
+
+  <!-- Entries with left border line -->
+  <div
+    style="
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding-left: 24px;
+      border-left: 2px solid var(--color-border);
+    "
+  >
+    {entries.map((entry, i) => (
+      <TimelineEntry
+        id={entry.id}
+        title={entry.title}
+        description={entry.description}
+        imageUrl={entry.imageUrl}
+        isFirst={i === 0}
+      />
+    ))}
+  </div>
+</div>

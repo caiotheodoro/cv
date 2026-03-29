@@ -1,0 +1,39 @@
+---
+interface Props {
+  label: string;
+  count?: number;
+}
+const { label, count } = Astro.props;
+---
+
+<div class="section-label">
+  <span class="label">{label}</span>
+  {count !== undefined && <span class="count">{count}</span>}
+</div>
+
+<style>
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+  .label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-tertiary);
+  }
+  .count {
+    font-size: 0.65rem;
+    background: var(--color-code-bg);
+    border: 1px solid var(--color-border);
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--color-text-secondary);
+  }
+</style>

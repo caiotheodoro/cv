@@ -1,0 +1,268 @@
+---
+import PageLayout from '@/layouts/PageLayout.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import { experiences } from '@/data/experience';
+
+const PER_PAGE = 7;
+
+export function getStaticPaths() {
+  const PER_PAGE = 7;
+  const totalPages = Math.max(1, Math.ceil(experiences.length / PER_PAGE));
+  return Array.from({ length: totalPages }, (_, i) => ({
+    params: { page: String(i + 1) },
+    props: {
+      items: experiences.slice(i * PER_PAGE, (i + 1) * PER_PAGE),
+      currentPage: i + 1,
+      totalPages,
+    },
+  }));
+}
+
+interface Props {
+  items: typeof experiences;
+  currentPage: number;
+  totalPages: number;
+}
+
+const { items, currentPage, totalPages } = Astro.props;
+---
+
+<PageLayout title="Experience | Caio Theodoro" description="Work experience." wide>
+  <div class="page-nav">
+    <a href="/projects" class="back">← Professional / Projects</a>
+  </div>
+  <PageHeader title="Experience" />
+
+  <div class="exp-list">
+    {items.map((exp) => (
+      <details class="exp-card">
+        <summary class="exp-summary">
+          <div class="exp-logo-wrap">
+            {exp.logo
+              ? <img src={exp.logo} alt={exp.company} class="exp-logo" loading="lazy" />
+              : <span class="exp-logo-placeholder">{exp.company[0]}</span>
+            }
+          </div>
+          <div class="exp-info">
+            <p class="exp-title">{exp.title}</p>
+            <p class="exp-company">{exp.company} · {exp.type}</p>
+            <p class="exp-meta">{exp.start} – {exp.end} · {exp.duration}</p>
+            {exp.location && <p class="exp-meta">{exp.location}</p>}
+          </div>
+          <svg class="exp-chevron" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+
+        <div class="exp-desc">
+          {exp.skills && exp.skills.length > 0 && (
+            <div class="exp-skills">
+              {exp.skills.map((s) => <span class="skill-tag">{s}</span>)}
+            </div>
+          )}
+          {exp.intro && <p class="exp-intro">{exp.intro}</p>}
+          {exp.bullets && exp.bullets.length > 0 && (
+            <ul class="exp-bullets">
+              {exp.bullets.map((b) => (
+                <li><strong>{b.title}:</strong> {b.text}</li>
+              ))}
+            </ul>
+          )}
+          {exp.note && <p class="exp-note">{exp.note}</p>}
+        </div>
+      </details>
+    ))}
+  </div>
+
+  {totalPages > 1 && (
+    <div class="pagination">
+      {currentPage > 1
+        ? <a href={`/projects/experience/${currentPage - 1}`} class="page-btn">← Previous</a>
+        : <span class="page-btn disabled">← Previous</span>
+      }
+      <span class="page-info">{currentPage} / {totalPages}</span>
+      {currentPage < totalPages
+        ? <a href={`/projects/experience/${currentPage + 1}`} class="page-btn">Next →</a>
+        : <span class="page-btn disabled">Next →</span>
+      }
+    </div>
+  )}
+</PageLayout>
+
+<style>
+  .page-nav {
+    margin-bottom: 1.5rem;
+  }
+  .back {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .back:hover {
+    color: var(--color-text);
+  }
+  .exp-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 2rem;
+  }
+  .exp-card {
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--color-bg);
+    transition: border-color 0.15s;
+    overflow: hidden;
+  }
+  .exp-card:hover,
+  .exp-card[open] {
+    border-color: var(--color-border-strong);
+  }
+  .exp-summary {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+  .exp-summary::-webkit-details-marker {
+    display: none;
+  }
+  .exp-logo-wrap {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    margin-top: 1px;
+  }
+  .exp-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .exp-logo-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+    background: var(--color-bg-subtle);
+  }
+  .exp-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .exp-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.3;
+    margin-bottom: 2px;
+  }
+  .exp-company {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 2px;
+  }
+  .exp-meta {
+    font-size: 0.72rem;
+    color: var(--color-text-tertiary);
+    line-height: 1.5;
+  }
+  .exp-chevron {
+    flex-shrink: 0;
+    color: var(--color-text-tertiary);
+    margin-top: 3px;
+    transition: transform 0.2s ease;
+  }
+  details[open] .exp-chevron {
+    transform: rotate(180deg);
+  }
+  .exp-desc {
+    padding: 0 16px 14px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .exp-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .skill-tag {
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--color-code-bg);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    font-weight: 500;
+  }
+  .exp-intro {
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+    line-height: 1.65;
+  }
+  .exp-bullets {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .exp-bullets li {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    padding-left: 12px;
+    position: relative;
+  }
+  .exp-bullets li::before {
+    content: '·';
+    position: absolute;
+    left: 0;
+    color: var(--color-text-tertiary);
+    font-weight: 700;
+  }
+  .exp-bullets strong {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+  .exp-note {
+    font-size: 0.72rem;
+    color: var(--color-text-tertiary);
+    font-style: italic;
+  }
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+  }
+  .page-btn {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .page-btn:not(.disabled):hover {
+    color: var(--color-text);
+  }
+  .page-btn.disabled {
+    color: var(--color-text-tertiary);
+    cursor: default;
+  }
+  .page-info {
+    font-size: 0.72rem;
+    color: var(--color-text-tertiary);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

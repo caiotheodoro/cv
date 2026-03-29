@@ -1,0 +1,16 @@
+---
+import BlogPostLayout from '@/layouts/BlogPostLayout.astro';
+import { getBlogPosts, getBlogPost } from '@/lib/notion-fetch';
+
+export async function getStaticPaths() {
+  const posts = await getBlogPosts();
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+const post = await getBlogPost(slug!);
+---
+
+<BlogPostLayout post={post} />

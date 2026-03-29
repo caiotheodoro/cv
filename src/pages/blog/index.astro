@@ -1,0 +1,45 @@
+---
+import PageLayout from '@/layouts/PageLayout.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import PostCard from '@/components/blog/PostCard.astro';
+import { getBlogPosts } from '@/lib/notion-fetch';
+
+const posts = await getBlogPosts();
+---
+
+<PageLayout title="Blog | Caio Theodoro" description="Notes on engineering, ML, and building things on the web">
+  <PageHeader
+    title="Blog"
+    subtitle="Notes on engineering, ML, and building things on the web."
+  />
+
+  {posts.length === 0 ? (
+    <div class="empty" data-fade data-delay="2">
+      No posts yet. Check back soon.
+    </div>
+  ) : (
+    <div class="post-list">
+      {posts.map((post, i) => (
+        <div data-fade data-delay={String(Math.min(i + 2, 6))}>
+          <PostCard post={post} />
+        </div>
+      ))}
+    </div>
+  )}
+</PageLayout>
+
+<style>
+  .empty {
+    padding: 48px 0;
+    text-align: center;
+    font-size: 0.88rem;
+    color: var(--color-text-tertiary);
+    border: 1px dashed var(--color-border);
+    border-radius: 10px;
+  }
+  .post-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+</style>

@@ -1,0 +1,81 @@
+---
+import { getExperience } from '@/utils/format';
+
+interface Props {
+  age: number;
+  degree: string;
+  workSince: string;
+  workingAt: string;
+  hobbies: string;
+}
+
+const { degree, workSince, workingAt, hobbies } = Astro.props;
+const { years, months } = getExperience(new Date(workSince));
+const expLabel = months > 0 ? `${years} yrs ${months} mo` : `${years} yrs`;
+
+const stats: { label: string; value: string }[] = [
+  { label: 'Experience', value: expLabel },
+  { label: 'Currently at', value: workingAt },
+  { label: 'Education', value: degree },
+  { label: 'Interests', value: hobbies },
+].filter((s) => s.value);
+---
+
+<dl class="about-stats" data-fade data-delay="3">
+  {stats.map((stat) => (
+    <div class="stat">
+      <dt>{stat.label}</dt>
+      <dd>{stat.value}</dd>
+    </div>
+  ))}
+</dl>
+
+<style>
+  .about-stats {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 2rem 0 2.5rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .stat {
+    flex: 1;
+    min-width: 130px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0.25rem 1.5rem 0.25rem 0;
+  }
+  .stat + .stat {
+    padding-left: 1.5rem;
+    border-left: 1px solid var(--color-border);
+  }
+  dt {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-tertiary);
+  }
+  dd {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-text);
+    line-height: 1.4;
+  }
+  @media (max-width: 480px) {
+    .stat {
+      min-width: 50%;
+      padding: 0.75rem 1rem 0.75rem 0;
+    }
+    .stat + .stat {
+      border-left: none;
+      padding-left: 0;
+    }
+    .stat:nth-child(2n) {
+      padding-left: 1rem;
+      border-left: 1px solid var(--color-border);
+    }
+  }
+</style>

@@ -1,0 +1,69 @@
+---
+import TimelineYear from './TimelineYear.astro';
+import type { JourneyEntry } from '@/types/index';
+
+interface Props {
+  entries: JourneyEntry[];
+}
+
+const { entries } = Astro.props;
+
+// Group entries by year
+const grouped = entries.reduce<Record<number, JourneyEntry[]>>((acc, entry) => {
+  (acc[entry.year] ??= []).push(entry);
+  return acc;
+}, {});
+
+const years = Object.keys(grouped)
+  .map(Number)
+  .sort((a, b) => b - a);
+---
+
+<div
+  class="timeline"
+  style="display: flex; flex-direction: column; gap: 56px;"
+>
+  {years.map((year) => (
+    <TimelineYear year={year} entries={grouped[year]!} />
+  ))}
+</div>
+
+<!-- Scroll-active script -->
+<script>
+  function initTimeline() {
+    const entries = Array.from(document.querySelectorAll<HTMLElement>('.timeline-entry'));
+    if (!entries.length) return;
+
+    let animFrame: number;
+
+    function update() {
+      const threshold = window.innerHeight / 3;
+      let closest: HTMLElement | null = null;
+      let minDist = Infinity;
+
+      entries.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        const dist = Math.abs(rect.top - threshold);
+        if (dist < minDist) {
+          minDist = dist;
+          closest = el;
+        }
+      });
+
+      entries.forEach((el) => {
+        el.dataset['active'] = el === closest ? 'true' : 'false';
+      });
+    }
+
+    function onScroll() {
+      cancelAnimationFrame(animFrame);
+      animFrame = requestAnimationFrame(update);
+    }
+
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+
+  initTimeline();
+  document.addEventListener('astro:after-swap', initTimeline);
+</script>

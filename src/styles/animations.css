@@ -1,0 +1,73 @@
+/* FadeUp animation for scroll-triggered elements */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+[data-fade] {
+  opacity: 0;
+}
+
+[data-fade][data-visible] {
+  animation: fadeUp 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Stagger delays for grouped fade-ins */
+[data-fade][data-delay="1"] { animation-delay: 0.05s; }
+[data-fade][data-delay="2"] { animation-delay: 0.12s; }
+[data-fade][data-delay="3"] { animation-delay: 0.19s; }
+[data-fade][data-delay="4"] { animation-delay: 0.26s; }
+[data-fade][data-delay="5"] { animation-delay: 0.33s; }
+[data-fade][data-delay="6"] { animation-delay: 0.40s; }
+
+/* Wave animation for emoji */
+@keyframes wave {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  10% { transform: rotate(14deg); }
+  20% { transform: rotate(-8deg); }
+  30% { transform: rotate(14deg); }
+  40% { transform: rotate(-4deg); }
+  50% { transform: rotate(10deg); }
+}
+
+.wave {
+  display: inline-block;
+  animation: wave 2.5s ease-in-out infinite;
+  transform-origin: 70% 70%;
+}
+
+/* Timeline scroll-active animation */
+.timeline-entry-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 500ms ease-out,
+    opacity 300ms ease-out;
+}
+
+.timeline-entry[data-active="true"] .timeline-entry-content {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.timeline-entry-content > div {
+  overflow: hidden;
+}
+
+/* Timeline dot */
+.timeline-dot {
+  background: var(--color-border-strong);
+  transition: background 300ms ease-out, box-shadow 300ms ease-out;
+}
+
+.timeline-entry[data-active="true"] .timeline-dot {
+  background: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(201, 61, 30, 0.15);
+}

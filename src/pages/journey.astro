@@ -1,0 +1,16 @@
+---
+import PageLayout from '@/layouts/PageLayout.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import Timeline from '@/components/journey/Timeline.astro';
+import { getJourneyEntries } from '@/lib/notion-fetch';
+
+const entries = await getJourneyEntries();
+---
+
+<PageLayout title="Journey | Caio Theodoro" description="A timeline of the moments that shaped my path.">
+  <PageHeader
+    title="Journey"
+    subtitle="A timeline of the moments that shaped my path."
+  />
+  <Timeline entries={entries} />
+</PageLayout>

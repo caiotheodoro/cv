@@ -1,0 +1,42 @@
+---
+import PageLayout from "@/layouts/PageLayout.astro";
+import PageHeader from "@/components/ui/PageHeader.astro";
+import SectionRow from "@/components/projects/SectionRow.astro";
+import ExperienceSection from "@/components/projects/ExperienceSection.astro";
+import { getProjects, getCertifications } from "@/lib/notion-fetch";
+
+const [projects, certifications] = await Promise.all([
+  getProjects(),
+  getCertifications(),
+]);
+const PREVIEW = 3;
+---
+
+<PageLayout
+  title="Professional / Projects | Caio Theodoro"
+  description="Selected work, open-source projects, and research notebooks."
+  wide
+>
+  <PageHeader
+    title="Professional / Projects"
+    subtitle="Selected work, open-source projects, and research notebooks."
+  />
+
+  <ExperienceSection />
+
+  <SectionRow
+    title="Certifications"
+    href="/projects/certifications/1"
+    items={certifications.slice(0, PREVIEW)}
+    total={certifications.length}
+    type="certification"
+  />
+
+  <SectionRow
+    title="Projects"
+    href="/projects/all/1"
+    items={projects.slice(0, PREVIEW)}
+    total={projects.length}
+    type="project"
+  />
+</PageLayout>

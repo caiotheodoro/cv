@@ -1,0 +1,77 @@
+---
+import { formatDate } from '@/utils/format';
+import type { BlogPostWithContent } from '@/types/index';
+
+interface Props {
+  post: BlogPostWithContent;
+}
+
+const { post } = Astro.props;
+---
+
+<header style="margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--color-border);">
+  <div style="
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-tertiary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  ">
+    <a href="/blog" style="color: inherit; text-decoration: none; opacity: 0.7; transition: opacity 0.2s;" class="back-link">
+      ← Blog
+    </a>
+    <span>·</span>
+    <span>{formatDate(post.publishDate)}</span>
+    {post.readingTime && (
+      <>
+        <span>·</span>
+        <span>{post.readingTime}</span>
+      </>
+    )}
+  </div>
+
+  <h1
+    class="font-heading"
+    style="
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      color: var(--color-text);
+      margin-bottom: 12px;
+    "
+  >
+    {post.title}
+  </h1>
+
+  <p style="font-size: 1rem; color: var(--color-text-secondary); line-height: 1.6; max-width: 600px;">
+    {post.description}
+  </p>
+
+  {post.tags.length > 0 && (
+    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px;">
+      {post.tags.map((tag) => (
+        <span style="
+          font-size: 0.72rem;
+          padding: 3px 10px;
+          border-radius: 4px;
+          border: 1px solid var(--color-border);
+          color: var(--color-text-secondary);
+          background: var(--color-code-bg);
+        ">
+          {tag}
+        </span>
+      ))}
+    </div>
+  )}
+</header>
+
+<style>
+  .back-link:hover {
+    opacity: 1 !important;
+  }
+</style>
