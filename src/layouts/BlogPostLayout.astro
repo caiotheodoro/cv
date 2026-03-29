@@ -1,6 +1,7 @@
 ---
 import PageLayout from './PageLayout.astro';
 import PostHeader from '@/components/blog/PostHeader.astro';
+import ReadingEnhancements from '@/components/blog/ReadingEnhancements.astro';
 import type { BlogPostWithContent } from '@/types/index';
 import '@/styles/prose.css';
 
@@ -19,4 +20,5 @@ const { post } = Astro.props;
     <PostHeader post={post} />
     <div class="prose" set:html={post.content} />
   </article>
+  <ReadingEnhancements />
 </PageLayout>

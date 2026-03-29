@@ -1,0 +1,397 @@
+---
+// No props — derives pathname at runtime
+---
+
+<div id="rp-bar" aria-hidden="true"></div>
+
+<div id="rp-popup" role="tooltip">
+  <button id="rp-save-btn">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+    Save
+  </button>
+</div>
+
+<button id="rp-snippets-btn" aria-label="Saved snippets">
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+  <span id="rp-badge"></span>
+</button>
+
+<div id="rp-panel-overlay"></div>
+<div id="rp-panel" role="dialog" aria-label="Saved snippets">
+  <div class="rp-panel-head">
+    <span>Saved snippets</span>
+    <button id="rp-panel-close" aria-label="Close">×</button>
+  </div>
+  <div id="rp-panel-list"></div>
+</div>
+
+<script>
+  function initBlogEnhancements() {
+    const prose = document.querySelector('.prose') as HTMLElement | null;
+    if (!prose) return;
+
+    const PATH = window.location.pathname;
+    const SCROLL_KEY = `cv:scroll:${PATH}`;
+    const SNIPPETS_KEY = `cv:snippets:${PATH}`;
+
+    const bar = document.getElementById('rp-bar') as HTMLElement;
+    const popup = document.getElementById('rp-popup') as HTMLElement;
+    const saveBtn = document.getElementById('rp-save-btn') as HTMLButtonElement;
+    const snippetsBtn = document.getElementById('rp-snippets-btn') as HTMLButtonElement;
+    const badge = document.getElementById('rp-badge') as HTMLSpanElement;
+    const overlay = document.getElementById('rp-panel-overlay') as HTMLElement;
+    const panel = document.getElementById('rp-panel') as HTMLElement;
+    const panelList = document.getElementById('rp-panel-list') as HTMLElement;
+    const panelClose = document.getElementById('rp-panel-close') as HTMLButtonElement;
+
+    if (!bar || !popup || !saveBtn || !snippetsBtn || !badge || !overlay || !panel || !panelList || !panelClose) return;
+
+    const ac = new AbortController();
+    const { signal } = ac;
+
+    // ── Snippets helpers ──────────────────────────────────────────
+    type Snippet = { id: string; text: string; timestamp: number };
+
+    function loadSnippets(): Snippet[] {
+      try { return JSON.parse(localStorage.getItem(SNIPPETS_KEY) || '[]'); } catch { return []; }
+    }
+    function saveSnippets(arr: Snippet[]) {
+      localStorage.setItem(SNIPPETS_KEY, JSON.stringify(arr));
+    }
+    function updateBadge() {
+      const n = loadSnippets().length;
+      badge.textContent = n > 0 ? String(n) : '';
+      badge.style.display = n > 0 ? 'flex' : 'none';
+      snippetsBtn.style.display = 'flex';
+    }
+    function renderPanel() {
+      const snips = loadSnippets();
+      if (snips.length === 0) {
+        panelList.innerHTML = '<p class="rp-empty">No saved snippets yet.</p>';
+        return;
+      }
+      panelList.innerHTML = snips.map(s => `
+        <div class="rp-snippet" data-id="${s.id}">
+          <p class="rp-snippet-text">${s.text.replace(/</g, '&lt;')}</p>
+          <button class="rp-delete" data-id="${s.id}" aria-label="Delete snippet">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          </button>
+        </div>
+      `).join('');
+    }
+    function openPanel() {
+      renderPanel();
+      panel.classList.add('open');
+      overlay.style.display = 'block';
+    }
+    function closePanel() {
+      panel.classList.remove('open');
+      overlay.style.display = 'none';
+    }
+
+    updateBadge();
+
+    // ── 1. Progress bar ───────────────────────────────────────────
+    let rafPending = false;
+    function updateBar() {
+      rafPending = false;
+      const rect = prose.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const proseHeight = prose.offsetHeight;
+      if (proseHeight <= vh) { bar.style.width = '100%'; return; }
+      const progress = Math.min(100, Math.max(0, (-rect.top / (proseHeight - vh)) * 100));
+      bar.style.width = `${progress}%`;
+    }
+
+    // ── 2. Scroll restore ─────────────────────────────────────────
+    const saved = sessionStorage.getItem(SCROLL_KEY);
+    if (saved) {
+      setTimeout(() => window.scrollTo({ top: Number(saved), behavior: 'instant' }), 60);
+    }
+
+    let scrollDebounce: ReturnType<typeof setTimeout>;
+    function onScroll() {
+      if (!rafPending) { rafPending = true; requestAnimationFrame(updateBar); }
+
+      clearTimeout(scrollDebounce);
+      scrollDebounce = setTimeout(() => {
+        sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
+        // Clear if near bottom of prose
+        const rect = prose.getBoundingClientRect();
+        if (rect.bottom - window.innerHeight < 100) {
+          sessionStorage.removeItem(SCROLL_KEY);
+        }
+      }, 300);
+    }
+
+    window.addEventListener('scroll', onScroll, { signal, passive: true });
+    updateBar();
+
+    // ── 3. Text selection → snippet popup ────────────────────────
+    let pendingText = '';
+
+    function hidePopup() {
+      popup.style.display = 'none';
+      pendingText = '';
+    }
+
+    function showPopupAt(x: number, y: number, text: string) {
+      pendingText = text;
+      popup.style.left = `${x + window.scrollX}px`;
+      popup.style.top = `${y + window.scrollY - 8}px`;
+      popup.style.display = 'block';
+    }
+
+    function isInsideProse(node: Node | null): boolean {
+      let n = node;
+      while (n) {
+        if (n === prose) return true;
+        n = n.parentNode;
+      }
+      return false;
+    }
+
+    function onSelectionEnd() {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed) { hidePopup(); return; }
+      const text = sel.toString().trim();
+      if (text.length < 10) { hidePopup(); return; }
+      if (!isInsideProse(sel.anchorNode) || !isInsideProse(sel.focusNode)) { hidePopup(); return; }
+
+      const range = sel.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      const midX = rect.left + rect.width / 2 - popup.offsetWidth / 2;
+      showPopupAt(midX, rect.top - popup.offsetHeight - 4, text);
+    }
+
+    document.addEventListener('mouseup', onSelectionEnd, { signal });
+    document.addEventListener('touchend', onSelectionEnd, { signal });
+
+    saveBtn.addEventListener('click', () => {
+      if (!pendingText) return;
+      const snips = loadSnippets();
+      snips.push({ id: Date.now().toString(36), text: pendingText, timestamp: Date.now() });
+      saveSnippets(snips);
+      updateBadge();
+      hidePopup();
+      window.getSelection()?.removeAllRanges();
+    }, { signal });
+
+    // Hide popup on outside click
+    document.addEventListener('mousedown', (e) => {
+      if (!(e.target as Element).closest('#rp-popup')) hidePopup();
+    }, { signal });
+
+    // ── Panel open/close ──────────────────────────────────────────
+    snippetsBtn.addEventListener('click', openPanel, { signal });
+    panelClose.addEventListener('click', closePanel, { signal });
+    overlay.addEventListener('click', closePanel, { signal });
+
+    panelList.addEventListener('click', (e) => {
+      const btn = (e.target as Element).closest('.rp-delete') as HTMLElement | null;
+      if (!btn) return;
+      const id = btn.dataset.id;
+      const snips = loadSnippets().filter(s => s.id !== id);
+      saveSnippets(snips);
+      updateBadge();
+      renderPanel();
+    }, { signal });
+
+    // ── Cleanup ───────────────────────────────────────────────────
+    document.addEventListener('astro:before-swap', () => {
+      ac.abort();
+      clearTimeout(scrollDebounce);
+    }, { once: true });
+  }
+
+  initBlogEnhancements();
+  document.addEventListener('astro:after-swap', initBlogEnhancements);
+</script>
+
+<style>
+  #rp-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 2px;
+    width: 0%;
+    background: var(--color-accent, #C93D1E);
+    z-index: 60;
+    transition: width 80ms linear;
+    pointer-events: none;
+  }
+
+  #rp-popup {
+    position: absolute;
+    display: none;
+    background: var(--color-bg, #fff);
+    border: 1px solid var(--color-border, #e8e8e4);
+    border-radius: 8px;
+    padding: 5px 10px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+    z-index: 50;
+    transform: translateY(-100%);
+  }
+
+  #rp-save-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.78rem;
+    color: var(--color-text, #171717);
+    padding: 2px 0;
+    font-family: inherit;
+  }
+
+  #rp-save-btn:hover {
+    color: var(--color-accent, #C93D1E);
+  }
+
+  #rp-snippets-btn {
+    display: none;
+    position: fixed;
+    bottom: 72px;
+    right: 20px;
+    z-index: 40;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--color-bg, #fff);
+    border: 1px solid var(--color-border, #e8e8e4);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    cursor: pointer;
+    color: var(--color-text-secondary, #555);
+    transition: color 0.15s, border-color 0.15s;
+    padding: 0;
+  }
+
+  #rp-snippets-btn:hover {
+    color: var(--color-text, #171717);
+    border-color: var(--color-border-strong, #ccc);
+  }
+
+  #rp-badge {
+    display: none;
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--color-accent, #C93D1E);
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+    line-height: 1;
+  }
+
+  #rp-panel-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.2);
+    z-index: 49;
+  }
+
+  #rp-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 60vh;
+    background: var(--color-bg, #fff);
+    border-top: 1px solid var(--color-border, #e8e8e4);
+    z-index: 50;
+    transform: translateY(100%);
+    transition: transform 0.25s ease;
+    border-radius: 16px 16px 0 0;
+    padding: 20px 24px;
+    overflow-y: auto;
+  }
+
+  #rp-panel.open {
+    transform: translateY(0);
+  }
+
+  .rp-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .rp-panel-head span {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text, #171717);
+  }
+
+  #rp-panel-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: var(--color-text-secondary, #555);
+    padding: 0 4px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #rp-panel-close:hover {
+    color: var(--color-text, #171717);
+  }
+
+  .rp-empty {
+    font-size: 0.8rem;
+    color: var(--color-text-tertiary, #999);
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  .rp-snippet {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-border, #e8e8e4);
+  }
+
+  .rp-snippet:last-child {
+    border-bottom: none;
+  }
+
+  .rp-snippet-text {
+    flex: 1;
+    font-size: 0.8rem;
+    color: var(--color-text-secondary, #555);
+    line-height: 1.5;
+  }
+
+  .rp-delete {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-tertiary, #999);
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    transition: color 0.15s;
+    margin-top: 2px;
+  }
+
+  .rp-delete:hover {
+    color: var(--color-accent, #C93D1E);
+  }
+</style>
