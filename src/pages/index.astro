@@ -1,14 +1,9 @@
 ---
 import PageLayout from "@/layouts/PageLayout.astro";
 import Hero from "@/components/about/Hero.astro";
-import CertificationsCarousel from "@/components/about/CertificationsCarousel";
-import SectionLabel from "@/components/ui/SectionLabel.astro";
 import { getAbout, getCertifications } from "@/lib/notion-fetch";
 
-const [about, certifications] = await Promise.all([
-  getAbout(),
-  getCertifications(),
-]);
+const [about] = await Promise.all([getAbout(), getCertifications()]);
 ---
 
 <PageLayout
