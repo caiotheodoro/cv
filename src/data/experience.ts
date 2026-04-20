@@ -21,7 +21,7 @@ export interface Experience {
 export const experiences: Experience[] = [
   {
     company: 'Adopt AI',
-    logo: 'https://media.licdn.com/dms/image/v2/D4D0BAQHoor2zup6kOw/company-logo_100_100/B4DZbESVBgHAAU-/0/1747049861656/getadoptai_logo?e=1776297600&v=beta&t=4dkxM2of2G8JFY0TrNrlKd-chVehALl-Qx-LQIzqKlE',
+    logo: '/experience-logos/adopt-ai.jpg',
     title: 'Senior AI Engineer',
     type: 'Full-time',
     start: 'Mar 2026',
@@ -32,7 +32,7 @@ export const experiences: Experience[] = [
   },
   {
     company: 'Avenza',
-    logo: 'https://media.licdn.com/dms/image/v2/D4D0BAQHcRWxBb9-d1w/company-logo_100_100/B4DZeadOiVGkAQ-/0/1750643042830?e=1776297600&v=beta&t=cGVyxvJyX_zVrgoYySshhnXDn66Dcub1d7SHpA321_4',
+    logo: '/experience-logos/avenza.jpg',
     title: 'CEO & Principal Engineer',
     type: 'Self-employed',
     start: 'Feb 2025',
@@ -48,7 +48,7 @@ export const experiences: Experience[] = [
   },
   {
     company: 'Acorns',
-    logo: 'https://media.licdn.com/dms/image/v2/C4D0BAQFPCL6sas4iAQ/company-logo_100_100/company-logo_100_100/0/1646339254391/acorns_grow_inc__logo?e=1776297600&v=beta&t=-YnzXB9QZrFCMPcRYzQ471Ry8YK2OapC7mJdGYHSN1Q',
+    logo: '/experience-logos/acorns.jpg',
     title: 'Software Engineer',
     type: 'Full-time',
     start: 'Jul 2025',
@@ -65,7 +65,7 @@ export const experiences: Experience[] = [
   },
   {
     company: 'MB Labs',
-    logo: 'https://media.licdn.com/dms/image/v2/D4D0BAQEbg178hS_5cg/company-logo_100_100/B4DZvc.rwFHgAQ-/0/1768938978721/mblabs_logo?e=1776297600&v=beta&t=2umh1qVXiXS0pBdwqUfQ3GF7nWYLRb5JxXKziO7mBeQ',
+    logo: '/experience-logos/mb-labs.jpg',
     title: 'Software Engineer',
     type: 'Full-time',
     start: 'Aug 2022',
@@ -82,7 +82,7 @@ export const experiences: Experience[] = [
   },
   {
     company: 'Mactus Informatica',
-    logo: 'https://media.licdn.com/dms/image/v2/C4D0BAQGCs3fKdaM1uw/company-logo_100_100/company-logo_100_100/0/1639425407127/mactus_informatica_logo?e=1776297600&v=beta&t=vj2pu5EsDqTRnTqo_Ndbjwbz7RMha1haW_JZq_naytg',
+    logo: '/experience-logos/mactus-informatica.jpg',
     title: 'Analyst / Software Engineer',
     type: 'Full-time',
     start: 'Jun 2021',
