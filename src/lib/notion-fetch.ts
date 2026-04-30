@@ -268,6 +268,25 @@ function parseBullets(bulletsText: string): Bullet[] {
   });
 }
 
+function calculateDuration(startDate: Date, endDate?: Date): string {
+  const end = endDate || new Date();
+  let months = (end.getFullYear() - startDate.getFullYear()) * 12 + (end.getMonth() - startDate.getMonth());
+
+  const years = Math.floor(months / 12);
+  const remainingMonths = months % 12;
+
+  if (years === 0) {
+    return remainingMonths === 1 ? '1 mo' : `${remainingMonths} mos`;
+  }
+  if (remainingMonths === 0) {
+    return years === 1 ? '1 yr' : `${years} yrs`;
+  }
+
+  const yearStr = years === 1 ? '1 yr' : `${years} yrs`;
+  const monthStr = remainingMonths === 1 ? '1 mo' : `${remainingMonths} mos`;
+  return `${yearStr} ${monthStr}`;
+}
+
 export async function getExperiences(): Promise<Experience[]> {
   const dbId = parseDbId(import.meta.env.NOTION_EXPERIENCES_DB_ID);
   const res = await notion.databases.query({
@@ -275,19 +294,24 @@ export async function getExperiences(): Promise<Experience[]> {
     sorts: [{ property: 'Start Date', direction: 'descending' }],
   });
 
-  return res.results.filter(isFullPage).map((page) => ({
-    id: page.id,
-    company: title(getProp(page, 'Company')),
-    title: richText(getProp(page, 'Position')),
-    type: select(getProp(page, 'Type')),
-    startDate: date(getProp(page, 'Start Date')) ?? new Date(),
-    endDate: date(getProp(page, 'End Date')),
-    duration: richText(getProp(page, 'Duration')),
-    location: richText(getProp(page, 'Location')),
-    intro: richText(getProp(page, 'Intro')),
-    bullets: parseBullets(richText(getProp(page, 'Bullets'))),
-    skills: multiSelect(getProp(page, 'Skills')),
-    logo: url(getProp(page, 'Logo URL')),
-    notes: richText(getProp(page, 'Notes')),
-  }));
+  return res.results.filter(isFullPage).map((page) => {
+    const startDate = date(getProp(page, 'Start Date')) ?? new Date();
+    const endDate = date(getProp(page, 'End Date'));
+
+    return {
+      id: page.id,
+      company: title(getProp(page, 'Company')),
+      title: richText(getProp(page, 'Position')),
+      type: select(getProp(page, 'Type')),
+      startDate,
+      endDate,
+      duration: calculateDuration(startDate, endDate),
+      location: richText(getProp(page, 'Location')),
+      intro: richText(getProp(page, 'Intro')),
+      bullets: parseBullets(richText(getProp(page, 'Bullets'))),
+      skills: multiSelect(getProp(page, 'Skills')),
+      logo: url(getProp(page, 'Logo URL')),
+      notes: richText(getProp(page, 'Notes')),
+    };
+  });
 }
