@@ -60,3 +60,24 @@ export interface BlogPost {
 export interface BlogPostWithContent extends BlogPost {
   content: string; // Markdown string from notion-to-md
 }
+
+export interface Bullet {
+  title: string;
+  text: string;
+}
+
+export interface Experience {
+  id: string;
+  company: string;
+  title: string;
+  type: string;
+  startDate: Date;
+  endDate: Date | undefined;
+  duration: string;
+  location: string;
+  intro: string;
+  bullets: Bullet[];
+  skills: string[];
+  logo: string | undefined;
+  notes: string;
+}

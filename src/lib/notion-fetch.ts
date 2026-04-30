@@ -20,6 +20,8 @@ import type {
   Certification,
   BlogPost,
   BlogPostWithContent,
+  Experience,
+  Bullet,
 } from '@/types/index';
 import type {
   PageObjectResponse,
@@ -251,4 +253,41 @@ export async function getBlogPost(slug: string): Promise<BlogPostWithContent> {
     content,
     readingTime: stats.text,
   };
+}
+
+// ─── Experiences ──────────────────────────────────────────────────────────────
+
+function parseBullets(bulletsText: string): Bullet[] {
+  if (!bulletsText.trim()) return [];
+  return bulletsText.split('\n').filter(line => line.trim()).map(line => {
+    const [titlePart, ...textParts] = line.split(':');
+    return {
+      title: titlePart.trim(),
+      text: textParts.join(':').trim(),
+    };
+  });
+}
+
+export async function getExperiences(): Promise<Experience[]> {
+  const dbId = parseDbId(import.meta.env.NOTION_EXPERIENCES_DB_ID);
+  const res = await notion.databases.query({
+    database_id: dbId,
+    sorts: [{ property: 'Start Date', direction: 'descending' }],
+  });
+
+  return res.results.filter(isFullPage).map((page) => ({
+    id: page.id,
+    company: title(getProp(page, 'Company')),
+    title: richText(getProp(page, 'Position')),
+    type: select(getProp(page, 'Type')),
+    startDate: date(getProp(page, 'Start Date')) ?? new Date(),
+    endDate: date(getProp(page, 'End Date')),
+    duration: richText(getProp(page, 'Duration')),
+    location: richText(getProp(page, 'Location')),
+    intro: richText(getProp(page, 'Intro')),
+    bullets: parseBullets(richText(getProp(page, 'Bullets'))),
+    skills: multiSelect(getProp(page, 'Skills')),
+    logo: url(getProp(page, 'Logo URL')),
+    notes: richText(getProp(page, 'Notes')),
+  }));
 }
