@@ -1,17 +1,39 @@
 ---
 import PageLayout from '@/layouts/PageLayout.astro';
 import PageHeader from '@/components/ui/PageHeader.astro';
-import { experiences } from '@/data/experience';
+import { getExperiences } from '@/lib/notion-fetch';
 
 const PER_PAGE = 7;
 
-export function getStaticPaths() {
-  const PER_PAGE = 7;
-  const totalPages = Math.max(1, Math.ceil(experiences.length / PER_PAGE));
+function formatDate(date: Date): string {
+  const options: Intl.DateTimeFormatOptions = { month: 'short', year: 'numeric' };
+  return new Intl.DateTimeFormat('en-US', options).format(date);
+}
+
+type ExperienceWithFormatted = Awaited<ReturnType<typeof getExperiences>>[0] & {
+  start: string;
+  end: string;
+  note: string;
+};
+
+function transformExperience(exp: Awaited<ReturnType<typeof getExperiences>>[0]): ExperienceWithFormatted {
+  return {
+    ...exp,
+    start: formatDate(exp.startDate),
+    end: exp.endDate ? formatDate(exp.endDate) : 'Present',
+    note: exp.notes,
+  } as ExperienceWithFormatted;
+}
+
+export async function getStaticPaths() {
+  const experiences = await getExperiences();
+  const transformed = experiences.map(transformExperience);
+  const totalPages = Math.max(1, Math.ceil(transformed.length / PER_PAGE));
+
   return Array.from({ length: totalPages }, (_, i) => ({
     params: { page: String(i + 1) },
     props: {
-      items: experiences.slice(i * PER_PAGE, (i + 1) * PER_PAGE),
+      items: transformed.slice(i * PER_PAGE, (i + 1) * PER_PAGE),
       currentPage: i + 1,
       totalPages,
     },
@@ -19,7 +41,7 @@ export function getStaticPaths() {
 }
 
 interface Props {
-  items: typeof experiences;
+  items: ExperienceWithFormatted[];
   currentPage: number;
   totalPages: number;
 }
