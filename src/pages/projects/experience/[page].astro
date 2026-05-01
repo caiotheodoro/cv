@@ -10,14 +10,20 @@ function formatDate(date: Date): string {
   return new Intl.DateTimeFormat('en-US', options).format(date);
 }
 
+type TransformedExperience = Awaited<ReturnType<typeof getExperiences>>[0] & {
+  start: string;
+  end: string;
+  note: string;
+};
+
 export async function getStaticPaths() {
   const experiences = await getExperiences();
-  const transformed = experiences.map((exp) => ({
+  const transformed: TransformedExperience[] = experiences.map((exp) => ({
     ...exp,
     start: formatDate(exp.startDate),
     end: exp.endDate ? formatDate(exp.endDate) : 'Present',
     note: exp.notes,
-  }));
+  })) as TransformedExperience[];
   const totalPages = Math.max(1, Math.ceil(transformed.length / PER_PAGE));
 
   return Array.from({ length: totalPages }, (_, i) => ({
@@ -31,7 +37,7 @@ export async function getStaticPaths() {
 }
 
 interface Props {
-  items: Awaited<ReturnType<typeof getExperiences>>[0][];
+  items: TransformedExperience[];
   currentPage: number;
   totalPages: number;
 }
