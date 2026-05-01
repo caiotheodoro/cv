@@ -1,8 +1,19 @@
 ---
-import { experiences } from '@/data/experience';
+import { getExperiences } from "@/lib/notion-fetch";
 
 const PREVIEW = 3;
-const preview = experiences.slice(0, PREVIEW);
+const experiences = await getExperiences();
+
+const preview = experiences.map((exp) => {
+  const start = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(exp.startDate);
+  const end = exp.endDate ? new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(exp.endDate) : 'Present';
+
+  return {
+    ...exp,
+    start,
+    end,
+  };
+}).slice(0, PREVIEW);
 ---
 
 <section class="section" data-fade>
@@ -15,26 +26,38 @@ const preview = experiences.slice(0, PREVIEW);
   </div>
 
   <div class="cards-row">
-    {preview.map((exp) => (
-      <div class="card">
-        <div class="card-top">
-          <div class="card-logo-wrap">
-            {exp.logo
-              ? <img src={exp.logo} alt={exp.company} class="card-logo" loading="lazy" />
-              : <span class="card-logo-placeholder">{exp.company[0]}</span>
-            }
+    {
+      preview.map((exp) => (
+        <div class="card">
+          <div class="card-top">
+            <div class="card-logo-wrap">
+              {exp.logo ? (
+                <img
+                  src={exp.logo}
+                  alt={exp.company}
+                  class="card-logo"
+                  loading="lazy"
+                />
+              ) : (
+                <span class="card-logo-placeholder">{exp.company[0]}</span>
+              )}
+            </div>
+            <div>
+              <p class="card-title">{exp.title}</p>
+              <p class="card-company">
+                {exp.company} · {exp.type}
+              </p>
+            </div>
           </div>
-          <div>
-            <p class="card-title">{exp.title}</p>
-            <p class="card-company">{exp.company} · {exp.type}</p>
+          <div class="card-bottom">
+            <p class="card-meta">
+              {exp.start} – {exp.end} · {exp.duration}
+            </p>
+            {exp.location && <p class="card-meta">{exp.location}</p>}
           </div>
         </div>
-        <div class="card-bottom">
-          <p class="card-meta">{exp.start} – {exp.end} · {exp.duration}</p>
-          {exp.location && <p class="card-meta">{exp.location}</p>}
-        </div>
-      </div>
-    ))}
+      ))
+    }
   </div>
 </section>
 
