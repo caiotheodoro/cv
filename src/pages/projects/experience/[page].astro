@@ -5,11 +5,6 @@ import { getExperiences } from '@/lib/notion-fetch';
 
 const PER_PAGE = 7;
 
-function formatDate(date: Date): string {
-  const options: Intl.DateTimeFormatOptions = { month: 'short', year: 'numeric' };
-  return new Intl.DateTimeFormat('en-US', options).format(date);
-}
-
 type TransformedExperience = Awaited<ReturnType<typeof getExperiences>>[0] & {
   start: string;
   end: string;
@@ -18,12 +13,18 @@ type TransformedExperience = Awaited<ReturnType<typeof getExperiences>>[0] & {
 
 export async function getStaticPaths() {
   const experiences = await getExperiences();
-  const transformed: TransformedExperience[] = experiences.map((exp) => ({
-    ...exp,
-    start: formatDate(exp.startDate),
-    end: exp.endDate ? formatDate(exp.endDate) : 'Present',
-    note: exp.notes,
-  })) as TransformedExperience[];
+
+  const transformed: TransformedExperience[] = experiences.map((exp) => {
+    const start = new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(exp.startDate);
+    const end = exp.endDate ? new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(exp.endDate) : 'Present';
+
+    return {
+      ...exp,
+      start,
+      end,
+      note: exp.notes,
+    } as TransformedExperience;
+  });
   const totalPages = Math.max(1, Math.ceil(transformed.length / PER_PAGE));
 
   return Array.from({ length: totalPages }, (_, i) => ({
