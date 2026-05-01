@@ -3,8 +3,6 @@ import PageLayout from '@/layouts/PageLayout.astro';
 import PageHeader from '@/components/ui/PageHeader.astro';
 import { getExperiences } from '@/lib/notion-fetch';
 
-const PER_PAGE = 7;
-
 type TransformedExperience = Awaited<ReturnType<typeof getExperiences>>[0] & {
   start: string;
   end: string;
@@ -12,6 +10,7 @@ type TransformedExperience = Awaited<ReturnType<typeof getExperiences>>[0] & {
 };
 
 export async function getStaticPaths() {
+  const PER_PAGE = 7;
   const experiences = await getExperiences();
 
   const transformed: TransformedExperience[] = experiences.map((exp) => {
